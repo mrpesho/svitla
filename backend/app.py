@@ -4,9 +4,18 @@ from flask_cors import CORS
 from config import Config
 from models import db
 
+# Allow OAuth on HTTP for local development
+if os.getenv('FLASK_ENV') == 'dev':
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # Session cookie configuration for cross-origin
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') != 'dev'
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
 
     # Initialize extensions
     db.init_app(app)
