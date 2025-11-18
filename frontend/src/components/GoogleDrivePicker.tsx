@@ -13,15 +13,18 @@ interface GoogleDrivePickerProps {
 export function GoogleDrivePicker({ onSelect, onClose, importing }: GoogleDrivePickerProps) {
   const [files, setFiles] = useState<DriveFile[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentFolder, setCurrentFolder] = useState<string>('root')
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null)
   const [folderPath, setFolderPath] = useState<{ id: string; name: string }[]>([
     { id: 'root', name: 'My Drive' }
   ])
   const modalRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    loadFiles(currentFolder)
+    loadFiles(currentFolder, true)
   }, [currentFolder])
 
   useEffect(() => {
@@ -33,19 +36,55 @@ export function GoogleDrivePicker({ onSelect, onClose, importing }: GoogleDriveP
     return () => document.removeEventListener('keydown', handleEscape)
   }, [onClose])
 
-  const loadFiles = async (folderId: string) => {
-    setLoading(true)
+  const sortFiles = (files: DriveFile[]) => {
+    return [...files].sort((a, b) => {
+      // Folders first
+      const aIsFolder = a.mimeType === 'application/vnd.google-apps.folder'
+      const bIsFolder = b.mimeType === 'application/vnd.google-apps.folder'
+      if (aIsFolder && !bIsFolder) return -1
+      if (!aIsFolder && bIsFolder) return 1
+      // Then alphabetical
+      return a.name.localeCompare(b.name)
+    })
+  }
+
+  const loadFiles = async (folderId: string, reset: boolean = false) => {
+    if (reset) {
+      setLoading(true)
+      setFiles([])
+      setNextPageToken(null)
+    } else {
+      setLoadingMore(true)
+    }
     setError(null)
 
-    const { data, error: apiError } = await filesApi.listDrive(folderId)
+    const pageToken = reset ? undefined : (nextPageToken || undefined)
+    const { data, error: apiError } = await filesApi.listDrive(folderId, pageToken)
 
     if (data) {
-      setFiles(data.files)
+      const newFiles = reset ? data.files : [...files, ...data.files]
+      setFiles(sortFiles(newFiles))
+      setNextPageToken(data.nextPageToken || null)
     } else if (apiError) {
       setError(apiError)
     }
 
     setLoading(false)
+    setLoadingMore(false)
+  }
+
+  const loadMore = () => {
+    if (nextPageToken && !loadingMore) {
+      loadFiles(currentFolder, false)
+    }
+  }
+
+  // Infinite scroll handler
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+    if (scrollHeight - scrollTop <= clientHeight + 100 && nextPageToken && !loadingMore) {
+      loadMore()
+    }
   }
 
   const handleFileClick = (file: DriveFile) => {
@@ -99,7 +138,11 @@ export function GoogleDrivePicker({ onSelect, onClose, importing }: GoogleDriveP
           </div>
 
           {/* File list */}
-          <div className="flex-1 overflow-y-auto border rounded-md">
+          <div
+            ref={listRef}
+            className="flex-1 overflow-y-auto border rounded-md"
+            onScroll={handleScroll}
+          >
             {loading ? (
               <div className="flex items-center justify-center h-48">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -139,6 +182,11 @@ export function GoogleDrivePicker({ onSelect, onClose, importing }: GoogleDriveP
                     )}
                   </button>
                 ))}
+                {loadingMore && (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  </div>
+                )}
               </div>
             )}
           </div>
