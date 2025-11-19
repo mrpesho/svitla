@@ -86,7 +86,10 @@ export function Privacy() {
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-3">Contact</h2>
           <p>
-            For questions about this privacy policy, please contact the application administrator.
+            For questions about this privacy policy, please contact us at{' '}
+            <a href="mailto:support@dataroom.app" className="text-primary hover:underline">
+              support@dataroom.app
+            </a>
           </p>
         </section>
 

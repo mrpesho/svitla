@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { FileList } from '@/components/FileList'
 import { GoogleDrivePicker } from '@/components/GoogleDrivePicker'
 import { Privacy } from '@/pages/Privacy'
+import { Terms } from '@/pages/Terms'
 import { LogOut, FolderOpen, Upload, Loader2 } from 'lucide-react'
 
 function App() {
@@ -98,9 +99,12 @@ function App() {
     }
   }, [])
 
-  // Handle privacy page route
+  // Handle static page routes
   if (window.location.pathname === '/privacy') {
     return <Privacy />
+  }
+  if (window.location.pathname === '/terms') {
+    return <Terms />
   }
 
   if (loading) {
@@ -144,7 +148,10 @@ function App() {
               Sign in with Google
             </Button>
             <p className="text-center text-sm text-muted-foreground mt-4">
+              By signing in you agree with the{' '}
               <a href="/privacy" className="hover:underline">Privacy Policy</a>
+              {' and '}
+              <a href="/terms" className="hover:underline">Terms of Service</a>
             </p>
           </CardContent>
         </Card>
