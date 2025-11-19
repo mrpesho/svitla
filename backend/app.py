@@ -58,7 +58,7 @@ def create_app():
     @app.route('/api/health')
     def health():
         print("Health check called", flush=True)
-        return jsonify({'status': 'healthy'})
+        return 'OK', 200
 
     # Create tables
     with app.app_context():
