@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { FileList } from '@/components/FileList'
 import { GoogleDrivePicker } from '@/components/GoogleDrivePicker'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Privacy } from '@/pages/Privacy'
 import { Terms } from '@/pages/Terms'
 import { LogOut, FolderOpen, Upload, Loader2, Trash2 } from 'lucide-react'
@@ -14,6 +15,8 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [showPicker, setShowPicker] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [deleteFileId, setDeleteFileId] = useState<number | null>(null)
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false)
 
   // Check auth status on mount and handle OAuth callback
   useEffect(() => {
@@ -76,10 +79,7 @@ function App() {
   }
 
   const handleDeleteAccount = async () => {
-    if (!confirm('Are you sure you want to delete your account? This will permanently delete all your files and cannot be undone.')) {
-      return
-    }
-
+    setShowDeleteAccount(false)
     const { error } = await authApi.deleteAccount()
     if (!error) {
       setUser(null)
@@ -102,16 +102,21 @@ function App() {
     }
   }, [])
 
-  const handleDelete = useCallback(async (fileId: number) => {
-    if (!confirm('Are you sure you want to delete this file?')) return
+  const handleDelete = useCallback((fileId: number) => {
+    setDeleteFileId(fileId)
+  }, [])
 
-    const { error } = await filesApi.delete(fileId)
+  const confirmDeleteFile = async () => {
+    if (!deleteFileId) return
+
+    const { error } = await filesApi.delete(deleteFileId)
     if (!error) {
-      setFiles(prev => prev.filter(f => f.id !== fileId))
+      setFiles(prev => prev.filter(f => f.id !== deleteFileId))
     } else {
       alert(`Delete failed: ${error}`)
     }
-  }, [])
+    setDeleteFileId(null)
+  }
 
   // Handle static page routes
   if (window.location.pathname === '/privacy') {
@@ -197,7 +202,7 @@ function App() {
               <Button variant="ghost" size="sm" onClick={handleLogout} title="Logout">
                 <LogOut className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleDeleteAccount} title="Delete Account" className="text-destructive hover:text-destructive">
+              <Button variant="ghost" size="sm" onClick={() => setShowDeleteAccount(true)} title="Delete Account" className="text-destructive hover:text-destructive">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -233,6 +238,28 @@ function App() {
           importing={importing}
         />
       )}
+
+      {/* Delete File Confirmation */}
+      <ConfirmDialog
+        isOpen={deleteFileId !== null}
+        title="Delete File"
+        message="Are you sure you want to delete this file? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={confirmDeleteFile}
+        onCancel={() => setDeleteFileId(null)}
+      />
+
+      {/* Delete Account Confirmation */}
+      <ConfirmDialog
+        isOpen={showDeleteAccount}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This will permanently delete all your files and cannot be undone."
+        confirmLabel="Delete Account"
+        variant="destructive"
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setShowDeleteAccount(false)}
+      />
     </div>
   )
 }
