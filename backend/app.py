@@ -13,9 +13,12 @@ def create_app():
     app.config.from_object(Config)
 
     # Debug: Log configuration values
-    print(f"DEBUG - FRONTEND_URL: {Config.FRONTEND_URL}")
-    print(f"DEBUG - GOOGLE_REDIRECT_URI: {Config.GOOGLE_REDIRECT_URI}")
-    print(f"DEBUG - FLASK_ENV: {os.getenv('FLASK_ENV')}")
+    import sys
+    sys.stdout.flush()
+    app.logger.info(f"DEBUG - FRONTEND_URL: {Config.FRONTEND_URL}")
+    app.logger.info(f"DEBUG - GOOGLE_REDIRECT_URI: {Config.GOOGLE_REDIRECT_URI}")
+    app.logger.info(f"DEBUG - FLASK_ENV: {os.getenv('FLASK_ENV')}")
+    app.logger.info(f"DEBUG - DATABASE_URL set: {bool(Config.SQLALCHEMY_DATABASE_URI)}")
 
     # Session cookie configuration for cross-origin
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
