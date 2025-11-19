@@ -33,6 +33,9 @@ def get_google_flow():
 @auth_bp.route('/login')
 def login():
     """Initiate Google OAuth flow."""
+    # Clear any existing session to avoid cookie conflicts
+    session.clear()
+
     flow = get_google_flow()
     authorization_url, state = flow.authorization_url(
         access_type='offline',
@@ -40,7 +43,6 @@ def login():
         prompt='consent'
     )
 
-    # Don't rely on session for state - it's passed through OAuth URL
     return jsonify({'auth_url': authorization_url})
 
 
