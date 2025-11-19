@@ -173,8 +173,8 @@ def delete_account():
     import os
     files = File.query.filter_by(user_id=user_id).all()
     for file in files:
-        if file.storage_path and os.path.exists(file.storage_path):
-            os.remove(file.storage_path)
+        if file.local_path and os.path.exists(file.local_path):
+            os.remove(file.local_path)
         db.session.delete(file)
 
     # Delete OAuth token
