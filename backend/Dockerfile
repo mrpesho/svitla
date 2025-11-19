@@ -18,8 +18,8 @@ COPY . .
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
-# Expose port
-EXPOSE 5000
+# Default port (Railway provides $PORT)
+ENV PORT=5000
 
-# Run with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "app:create_app()"]
+# Run with gunicorn using dynamic port
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 wsgi:app
