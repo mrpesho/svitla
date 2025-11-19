@@ -149,9 +149,9 @@ function App() {
             </Button>
             <p className="text-center text-sm text-muted-foreground mt-4">
               By signing in you agree with the{' '}
-              <a href="/privacy" className="hover:underline">Privacy Policy</a>
+              <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
               {' and '}
-              <a href="/terms" className="hover:underline">Terms of Service</a>
+              <a href="/terms" className="text-primary hover:underline">Terms of Service</a>
             </p>
           </CardContent>
         </Card>
