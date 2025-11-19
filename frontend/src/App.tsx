@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { FileList } from '@/components/FileList'
 import { GoogleDrivePicker } from '@/components/GoogleDrivePicker'
+import { Privacy } from '@/pages/Privacy'
 import { LogOut, FolderOpen, Upload, Loader2 } from 'lucide-react'
 
 function App() {
@@ -96,6 +97,11 @@ function App() {
       alert(`Delete failed: ${error}`)
     }
   }, [])
+
+  // Handle privacy page route
+  if (window.location.pathname === '/privacy') {
+    return <Privacy />
+  }
 
   if (loading) {
     return (
