@@ -47,6 +47,7 @@ def login():
 @auth_bp.route('/callback')
 def callback():
     """Handle Google OAuth callback."""
+    print(f"Callback received - session keys before: {list(session.keys())}", flush=True)
     try:
         flow = get_google_flow()
         flow.fetch_token(authorization_response=request.url)
@@ -95,8 +96,11 @@ def callback():
 
         db.session.commit()
 
-        # Store user ID in session
+        # Store user ID in session (keep existing session data)
         session['user_id'] = user.id
+        # Clear oauth_state as it's no longer needed
+        session.pop('oauth_state', None)
+        session.modified = True
         print(f"OAuth callback - set user_id: {user.id}, session keys: {list(session.keys())}", flush=True)
 
         # Redirect to frontend with success
