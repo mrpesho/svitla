@@ -3,9 +3,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def get_database_url():
+    """Get database URL, converting postgresql:// to postgresql+psycopg:// if needed."""
+    url = os.getenv('DATABASE_URL', 'postgresql+psycopg://postgres:postgres@localhost:5432/dataroom')
+    # Railway uses postgresql://, but we need postgresql+psycopg:// for psycopg3
+    if url.startswith('postgresql://'):
+        url = url.replace('postgresql://', 'postgresql+psycopg://', 1)
+    return url
+
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql+psycopg://postgres:postgres@localhost:5432/dataroom')
+    SQLALCHEMY_DATABASE_URI = get_database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Google OAuth
