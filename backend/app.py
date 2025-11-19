@@ -38,7 +38,11 @@ def create_app():
 
     # Create tables
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            # Tables might already exist from previous deployment
+            app.logger.warning(f"create_all warning: {e}")
 
     return app
 
