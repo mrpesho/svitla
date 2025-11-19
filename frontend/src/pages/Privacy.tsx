@@ -28,8 +28,9 @@ export function Privacy() {
               to list and import files you select. We only access files you explicitly choose to import.
             </li>
             <li>
-              <strong>Imported Files:</strong> Files you import are stored securely on our servers
-              and associated with your account.
+              <strong>Imported Files:</strong> When you import files, we download a copy from your
+              Google Drive and store it on our servers. Your original files in Google Drive are
+              not modified or deleted.
             </li>
           </ul>
         </section>
@@ -64,7 +65,8 @@ export function Privacy() {
           <p className="mb-3">
             You can delete your imported files at any time through the application.
             You can also delete your account and all associated data using the "Delete Account"
-            option in the application settings.
+            option in the header. Deleting files or your account only removes data from our
+            servers - your original files in Google Drive are not affected.
           </p>
         </section>
 

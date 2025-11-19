@@ -254,7 +254,7 @@ function App() {
       <ConfirmDialog
         isOpen={showDeleteAccount}
         title="Delete Account"
-        message="Are you sure you want to delete your account? This will permanently delete all your files and cannot be undone."
+        message="Are you sure you want to delete your account? This will permanently delete your account and all imported files from our database. Your original files in Google Drive will not be affected."
         confirmLabel="Delete Account"
         variant="destructive"
         onConfirm={handleDeleteAccount}
