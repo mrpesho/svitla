@@ -143,6 +143,9 @@ function App() {
               </svg>
               Sign in with Google
             </Button>
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              <a href="/privacy" className="hover:underline">Privacy Policy</a>
+            </p>
           </CardContent>
         </Card>
       </div>
