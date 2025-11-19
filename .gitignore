@@ -318,3 +318,6 @@ pip-selfcheck.json
 
 # End of https://www.toptal.com/developers/gitignore/api/pycharm+all,venv,python
 
+# Exception for frontend source lib (shadcn utils)
+!frontend/src/lib/
+
