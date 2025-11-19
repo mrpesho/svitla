@@ -97,6 +97,7 @@ def callback():
 
         # Store user ID in session
         session['user_id'] = user.id
+        print(f"OAuth callback - set user_id: {user.id}, session keys: {list(session.keys())}", flush=True)
 
         # Redirect to frontend with success
         return redirect(f"{Config.FRONTEND_URL}?auth=success")
@@ -132,6 +133,7 @@ def logout():
 def auth_status():
     """Check authentication status."""
     user_id = session.get('user_id')
+    print(f"Auth status check - user_id: {user_id}, session keys: {list(session.keys())}", flush=True)
 
     if not user_id:
         return jsonify({'authenticated': False})
