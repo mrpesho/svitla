@@ -28,8 +28,13 @@ def create_app():
     app.logger.info(f"DEBUG - DATABASE_URL set: {bool(Config.SQLALCHEMY_DATABASE_URI)}")
 
     # Session cookie configuration for cross-origin
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') != 'dev'
+    if os.getenv('FLASK_ENV') == 'dev':
+        app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+        app.config['SESSION_COOKIE_SECURE'] = False
+    else:
+        # Production: cross-origin requires SameSite=None and Secure=True
+        app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+        app.config['SESSION_COOKIE_SECURE'] = True
     app.config['SESSION_COOKIE_HTTPONLY'] = True
 
     # Initialize extensions
