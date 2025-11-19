@@ -68,7 +68,13 @@ export function FileList({ files, onDelete }: FileListProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => window.open(filesApi.getViewUrl(file.id), '_blank')}
+                onClick={async () => {
+                  try {
+                    await filesApi.viewFile(file.id)
+                  } catch (error) {
+                    alert(`Failed to view file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                  }
+                }}
                 title="View file"
               >
                 <Eye className="h-4 w-4" />
@@ -76,7 +82,13 @@ export function FileList({ files, onDelete }: FileListProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => window.open(filesApi.getDownloadUrl(file.id), '_blank')}
+                onClick={async () => {
+                  try {
+                    await filesApi.downloadFile(file.id, file.name)
+                  } catch (error) {
+                    alert(`Failed to download file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                  }
+                }}
                 title="Download file"
               >
                 <Download className="h-4 w-4" />

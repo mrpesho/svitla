@@ -63,6 +63,32 @@ export const filesApi = {
   },
   getViewUrl: (id: number) => `${API_BASE}/files/${id}/view`,
   getDownloadUrl: (id: number) => `${API_BASE}/files/${id}/download`,
+  viewFile: async (id: number) => {
+    const response = await fetch(`${API_BASE}/files/${id}/view`, {
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      throw new Error('Failed to fetch file')
+    }
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+  },
+  downloadFile: async (id: number, filename: string) => {
+    const response = await fetch(`${API_BASE}/files/${id}/download`, {
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      throw new Error('Failed to fetch file')
+    }
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  },
 }
 
 // Types
