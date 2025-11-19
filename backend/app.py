@@ -12,6 +12,11 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # Debug: Log configuration values
+    print(f"DEBUG - FRONTEND_URL: {Config.FRONTEND_URL}")
+    print(f"DEBUG - GOOGLE_REDIRECT_URI: {Config.GOOGLE_REDIRECT_URI}")
+    print(f"DEBUG - FLASK_ENV: {os.getenv('FLASK_ENV')}")
+
     # Session cookie configuration for cross-origin
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') != 'dev'
