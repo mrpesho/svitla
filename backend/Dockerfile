@@ -22,4 +22,4 @@ RUN mkdir -p /app/uploads
 ENV PORT=5000
 
 # Run with gunicorn using dynamic port
-CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 wsgi:app
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 --log-level info --capture-output wsgi:app

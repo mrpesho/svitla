@@ -1,8 +1,15 @@
 import os
+import sys
 from flask import Flask, jsonify
 from flask_cors import CORS
 from config import Config
 from models import db
+
+# Module-level debug
+print("=== APP.PY LOADING ===", flush=True)
+print(f"FRONTEND_URL: {Config.FRONTEND_URL}", flush=True)
+print(f"GOOGLE_REDIRECT_URI: {Config.GOOGLE_REDIRECT_URI}", flush=True)
+print(f"FLASK_ENV: {os.getenv('FLASK_ENV')}", flush=True)
 
 # Allow OAuth on HTTP for local development
 if os.getenv('FLASK_ENV') == 'dev':
