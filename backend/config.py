@@ -5,10 +5,17 @@ load_dotenv()
 
 def get_database_url():
     """Get database URL, converting postgresql:// to postgresql+psycopg:// if needed."""
-    url = os.getenv('DATABASE_URL', 'postgresql+psycopg://postgres:postgres@localhost:5432/dataroom')
+    url = os.getenv('DATABASE_URL')
+
+    if not url:
+        # Default for local development
+        return 'postgresql+psycopg://postgres:postgres@localhost:5432/dataroom'
+
     # Railway uses postgresql://, but we need postgresql+psycopg:// for psycopg3
     if url.startswith('postgresql://'):
         url = url.replace('postgresql://', 'postgresql+psycopg://', 1)
+
+    print(f"Database URL scheme: {url.split('://')[0] if '://' in url else 'INVALID'}")
     return url
 
 class Config:
