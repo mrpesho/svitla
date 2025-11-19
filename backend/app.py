@@ -2,6 +2,7 @@ import os
 import sys
 from flask import Flask, jsonify
 from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 from config import Config
 from models import db
 
@@ -18,6 +19,10 @@ if os.getenv('FLASK_ENV') == 'dev':
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # Fix for running behind a proxy (Railway, etc.)
+    # This makes request.url use HTTPS when behind SSL-terminating proxy
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     # Debug: Log configuration values
     import sys
