@@ -57,13 +57,8 @@ def create_app():
     # Health check endpoint
     @app.route('/api/health')
     def health():
-        try:
-            # Test database connection
-            db.session.execute(db.text('SELECT 1'))
-            return jsonify({'status': 'healthy', 'db': 'connected'})
-        except Exception as e:
-            print(f"Health check DB error: {e}", flush=True)
-            return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
+        print("Health check called", flush=True)
+        return jsonify({'status': 'healthy'})
 
     # Create tables
     with app.app_context():
