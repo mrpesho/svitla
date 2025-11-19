@@ -40,7 +40,7 @@ def login():
         prompt='consent'
     )
 
-    session['oauth_state'] = state
+    # Don't rely on session for state - it's passed through OAuth URL
     return jsonify({'auth_url': authorization_url})
 
 
