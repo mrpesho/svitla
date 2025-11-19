@@ -7,6 +7,10 @@ from datetime import datetime, timedelta
 from models import db, User, OAuthToken
 from config import Config
 import json
+import secrets
+
+# Temporary storage for auth tokens (in production, use Redis)
+auth_tokens = {}
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -98,19 +102,37 @@ def callback():
 
         db.session.commit()
 
-        # Store user ID in session (keep existing session data)
-        session['user_id'] = user.id
-        # Clear oauth_state as it's no longer needed
-        session.pop('oauth_state', None)
-        session.modified = True
-        print(f"OAuth callback - set user_id: {user.id}, session keys: {list(session.keys())}", flush=True)
+        # Generate a one-time token for the frontend to exchange
+        token = secrets.token_urlsafe(32)
+        auth_tokens[token] = user.id
+        print(f"OAuth callback - generated token for user_id: {user.id}", flush=True)
 
-        # Redirect to frontend with success
-        return redirect(f"{Config.FRONTEND_URL}?auth=success")
+        # Redirect to frontend with token
+        return redirect(f"{Config.FRONTEND_URL}?auth=success&token={token}")
 
     except Exception as e:
         current_app.logger.error(f"OAuth callback error: {str(e)}")
         return redirect(f"{Config.FRONTEND_URL}?auth=error&message={str(e)}")
+
+
+@auth_bp.route('/exchange', methods=['POST'])
+def exchange_token():
+    """Exchange auth token for session."""
+    data = request.get_json()
+    token = data.get('token') if data else None
+
+    if not token or token not in auth_tokens:
+        return jsonify({'error': 'Invalid token'}), 401
+
+    user_id = auth_tokens.pop(token)  # One-time use
+    session['user_id'] = user_id
+    print(f"Token exchange - set session user_id: {user_id}", flush=True)
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    return jsonify({'authenticated': True, 'user': user.to_dict()})
 
 
 @auth_bp.route('/me')

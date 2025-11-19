@@ -37,6 +37,10 @@ export const authApi = {
   logout: () => request<{ message: string }>('/auth/logout', { method: 'POST' }),
   status: () => request<{ authenticated: boolean; user?: User }>('/auth/status'),
   me: () => request<User>('/auth/me'),
+  exchange: (token: string) => request<{ authenticated: boolean; user: User }>('/auth/exchange', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  }),
 }
 
 // Files API

@@ -16,12 +16,28 @@ function App() {
   // Check auth status on mount and handle OAuth callback
   useEffect(() => {
     const checkAuth = async () => {
-      // Check for OAuth callback
+      // Check for OAuth callback with token
       const params = new URLSearchParams(window.location.search)
-      if (params.get('auth') === 'success') {
+      const token = params.get('token')
+
+      if (params.get('auth') === 'success' && token) {
+        // Exchange token for session
+        const { data: exchangeData, error } = await authApi.exchange(token)
+        window.history.replaceState({}, '', window.location.pathname)
+
+        if (exchangeData?.authenticated && exchangeData.user) {
+          setUser(exchangeData.user)
+          await loadFiles()
+          setLoading(false)
+          return
+        } else if (error) {
+          console.error('Token exchange failed:', error)
+        }
+      } else if (params.get('auth') === 'success') {
         window.history.replaceState({}, '', window.location.pathname)
       }
 
+      // Check existing session
       const { data } = await authApi.status()
       if (data?.authenticated && data.user) {
         setUser(data.user)
