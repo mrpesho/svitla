@@ -39,6 +39,14 @@ def create_app():
     # Ensure upload folder exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+    # Global error handler
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        print(f"Unhandled exception: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
     # Register blueprints
     from routes.auth import auth_bp
     from routes.files import files_bp
@@ -49,7 +57,13 @@ def create_app():
     # Health check endpoint
     @app.route('/api/health')
     def health():
-        return jsonify({'status': 'healthy'})
+        try:
+            # Test database connection
+            db.session.execute(db.text('SELECT 1'))
+            return jsonify({'status': 'healthy', 'db': 'connected'})
+        except Exception as e:
+            print(f"Health check DB error: {e}", flush=True)
+            return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
 
     # Create tables
     with app.app_context():
