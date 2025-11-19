@@ -4,7 +4,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
-from models import db, User, OAuthToken
+from models import db, User, OAuthToken, File
 from config import Config
 import json
 import secrets
@@ -155,6 +155,41 @@ def logout():
     """Log out current user."""
     session.pop('user_id', None)
     return jsonify({'message': 'Logged out successfully'})
+
+
+@auth_bp.route('/account', methods=['DELETE'])
+def delete_account():
+    """Delete current user's account and all associated data."""
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Delete all user's files from storage
+    import os
+    files = File.query.filter_by(user_id=user_id).all()
+    for file in files:
+        if file.storage_path and os.path.exists(file.storage_path):
+            os.remove(file.storage_path)
+        db.session.delete(file)
+
+    # Delete OAuth token
+    oauth_token = OAuthToken.query.filter_by(user_id=user_id).first()
+    if oauth_token:
+        db.session.delete(oauth_token)
+
+    # Delete user
+    db.session.delete(user)
+    db.session.commit()
+
+    # Clear session
+    session.pop('user_id', None)
+
+    return jsonify({'message': 'Account deleted successfully'})
 
 
 @auth_bp.route('/status')

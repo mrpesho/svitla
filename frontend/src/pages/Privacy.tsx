@@ -63,7 +63,8 @@ export function Privacy() {
           <h2 className="text-xl font-semibold mb-3">Your Rights</h2>
           <p className="mb-3">
             You can delete your imported files at any time through the application.
-            To delete your account and all associated data, please contact us.
+            You can also delete your account and all associated data using the "Delete Account"
+            option in the application settings.
           </p>
         </section>
 
@@ -84,12 +85,10 @@ export function Privacy() {
         </section>
 
         <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-3">Contact</h2>
+          <h2 className="text-xl font-semibold mb-3">Changes to This Policy</h2>
           <p>
-            For questions about this privacy policy, please contact us at{' '}
-            <a href="mailto:support@dataroom.app" className="text-primary hover:underline">
-              support@dataroom.app
-            </a>
+            We may update this privacy policy from time to time. We will notify you of any
+            changes by posting the new policy on this page with an updated date.
           </p>
         </section>
 

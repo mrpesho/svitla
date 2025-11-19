@@ -69,12 +69,10 @@ export function Terms() {
         </section>
 
         <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-3">Contact</h2>
+          <h2 className="text-xl font-semibold mb-3">Governing Law</h2>
           <p>
-            For questions about these terms, please contact us at{' '}
-            <a href="mailto:support@dataroom.app" className="text-primary hover:underline">
-              support@dataroom.app
-            </a>
+            These terms shall be governed by and construed in accordance with applicable laws,
+            without regard to conflict of law principles.
           </p>
         </section>
 

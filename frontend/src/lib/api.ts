@@ -41,6 +41,7 @@ export const authApi = {
     method: 'POST',
     body: JSON.stringify({ token }),
   }),
+  deleteAccount: () => request<{ message: string }>('/auth/account', { method: 'DELETE' }),
 }
 
 // Files API

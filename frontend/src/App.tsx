@@ -6,7 +6,7 @@ import { FileList } from '@/components/FileList'
 import { GoogleDrivePicker } from '@/components/GoogleDrivePicker'
 import { Privacy } from '@/pages/Privacy'
 import { Terms } from '@/pages/Terms'
-import { LogOut, FolderOpen, Upload, Loader2 } from 'lucide-react'
+import { LogOut, FolderOpen, Upload, Loader2, Trash2 } from 'lucide-react'
 
 function App() {
   const [user, setUser] = useState<User | null>(null)
@@ -73,6 +73,20 @@ function App() {
     await authApi.logout()
     setUser(null)
     setFiles([])
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!confirm('Are you sure you want to delete your account? This will permanently delete all your files and cannot be undone.')) {
+      return
+    }
+
+    const { error } = await authApi.deleteAccount()
+    if (!error) {
+      setUser(null)
+      setFiles([])
+    } else {
+      alert(`Failed to delete account: ${error}`)
+    }
   }
 
   const handleImport = useCallback(async (fileId: string) => {
@@ -180,8 +194,11 @@ function App() {
                 )}
                 <span className="text-sm font-medium">{user.name}</span>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <Button variant="ghost" size="sm" onClick={handleLogout} title="Logout">
                 <LogOut className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleDeleteAccount} title="Delete Account" className="text-destructive hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
