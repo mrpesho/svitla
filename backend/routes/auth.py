@@ -89,8 +89,17 @@ def callback():
         if not required_scopes.issubset(granted_scopes):
             missing_scopes = required_scopes - granted_scopes
             print(f"Missing scopes: {missing_scopes}", flush=True)
-            error_msg = "Please grant all required permissions including Google Drive access"
-            return redirect(f"{Config.FRONTEND_URL}?auth=error&message={error_msg}")
+            print(f"Automatically retrying authorization with full scopes...", flush=True)
+
+            # Generate new authorization URL with explicit prompt
+            retry_flow = get_google_flow()
+            authorization_url, state = retry_flow.authorization_url(
+                access_type='offline',
+                prompt='consent'
+            )
+
+            # Redirect to auth again (user won't see an error, just another redirect)
+            return redirect(authorization_url)
 
         # Get user info from Google
         oauth2_service = build('oauth2', 'v2', credentials=credentials)
