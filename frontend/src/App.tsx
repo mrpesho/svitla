@@ -17,7 +17,7 @@ function App() {
   const [importing, setImporting] = useState(false)
   const [deleteFileId, setDeleteFileId] = useState<number | null>(null)
   const [showDeleteAccount, setShowDeleteAccount] = useState(false)
-  const [duplicateFileError, setDuplicateFileError] = useState<string | null>(null)
+  const [duplicateFile, setDuplicateFile] = useState<{ fileId: string; name: string } | null>(null)
 
   // Check auth status on mount and handle OAuth callback
   useEffect(() => {
@@ -90,17 +90,24 @@ function App() {
     }
   }
 
-  const handleImport = useCallback(async (fileId: string) => {
+  const handleImport = useCallback(async (fileId: string, fileName: string, overwrite = false) => {
     setImporting(true)
-    const { data, error } = await filesApi.import(fileId)
+    const { data, error } = await filesApi.import(fileId, overwrite)
     setImporting(false)
 
     if (data) {
-      setFiles(prev => [data, ...prev])
+      if (overwrite) {
+        // Replace existing file in list
+        setFiles(prev => prev.map(f => f.google_drive_id === fileId ? data : f))
+      } else {
+        // Add new file to list
+        setFiles(prev => [data, ...prev])
+      }
       setShowPicker(false)
+      setDuplicateFile(null)
     } else if (error) {
-      if (error.includes('already imported')) {
-        setDuplicateFileError(error)
+      if (error.includes('already imported') && !overwrite) {
+        setDuplicateFile({ fileId, name: fileName })
       } else {
         alert(`Import failed: ${error}`)
       }
@@ -266,13 +273,20 @@ function App() {
         onCancel={() => setShowDeleteAccount(false)}
       />
 
-      {/* Duplicate File Info */}
+      {/* Duplicate File Overwrite Confirmation */}
       <ConfirmDialog
-        isOpen={duplicateFileError !== null}
+        isOpen={duplicateFile !== null}
         title="File Already Imported"
-        message={duplicateFileError || ''}
-        variant="info"
-        onConfirm={() => setDuplicateFileError(null)}
+        message={`"${duplicateFile?.name}" has already been imported. Do you want to overwrite it with the latest version from Google Drive?`}
+        confirmLabel="Overwrite"
+        cancelLabel="Cancel"
+        variant="default"
+        onConfirm={() => {
+          if (duplicateFile) {
+            handleImport(duplicateFile.fileId, duplicateFile.name, true)
+          }
+        }}
+        onCancel={() => setDuplicateFile(null)}
       />
     </div>
   )

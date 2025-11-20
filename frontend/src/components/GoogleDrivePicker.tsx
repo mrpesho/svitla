@@ -5,7 +5,7 @@ import { X, Loader2, FolderOpen, File as FileIcon, ChevronRight } from 'lucide-r
 import { filesApi, type DriveFile } from '@/lib/api'
 
 interface GoogleDrivePickerProps {
-  onSelect: (fileId: string) => void
+  onSelect: (fileId: string, fileName: string) => void
   onClose: () => void
   importing: boolean
 }
@@ -94,7 +94,7 @@ export function GoogleDrivePicker({ onSelect, onClose, importing }: GoogleDriveP
       setFolderPath(prev => [...prev, { id: file.id, name: file.name }])
     } else {
       // Select file for import
-      onSelect(file.id)
+      onSelect(file.id, file.name)
     }
   }
 

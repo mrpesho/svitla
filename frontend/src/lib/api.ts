@@ -49,9 +49,9 @@ export const filesApi = {
   list: () => request<DataroomFile[]>('/files'),
   get: (id: number) => request<DataroomFile>(`/files/${id}`),
   delete: (id: number) => request<{ message: string }>(`/files/${id}`, { method: 'DELETE' }),
-  import: (fileId: string) => request<DataroomFile>('/files/import', {
+  import: (fileId: string, overwrite = false) => request<DataroomFile>('/files/import', {
     method: 'POST',
-    body: JSON.stringify({ fileId }),
+    body: JSON.stringify({ fileId, overwrite }),
   }),
   listDrive: (folderId?: string, pageToken?: string) => {
     const params = new URLSearchParams()

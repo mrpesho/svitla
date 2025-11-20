@@ -86,6 +86,7 @@ def import_file():
 
     try:
         file_id = data['fileId']
+        overwrite = data.get('overwrite', False)
 
         # Get file metadata from Drive
         file_metadata = drive_service.files().get(
@@ -99,8 +100,14 @@ def import_file():
             google_drive_id=file_id
         ).first()
 
-        if existing:
+        if existing and not overwrite:
             return jsonify({'error': 'File already imported', 'file': existing.to_dict()}), 409
+
+        # Delete existing file if overwriting
+        if existing:
+            if os.path.exists(existing.local_path):
+                os.remove(existing.local_path)
+            db.session.delete(existing)
 
         # Handle Google Docs/Sheets/Slides (export them)
         mime_type = file_metadata.get('mimeType', '')
