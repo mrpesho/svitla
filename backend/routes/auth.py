@@ -52,9 +52,13 @@ def login():
     session.clear()
 
     flow = get_google_flow()
+
+    # Always prompt for consent to ensure we get all required scopes
+    # This prevents scope mismatch errors from cached authorizations
     authorization_url, state = flow.authorization_url(
         access_type='offline',
-        include_granted_scopes='true'
+        include_granted_scopes='true',
+        prompt='consent'
     )
 
     return jsonify({'auth_url': authorization_url})
