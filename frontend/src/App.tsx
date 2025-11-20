@@ -17,6 +17,7 @@ function App() {
   const [importing, setImporting] = useState(false)
   const [deleteFileId, setDeleteFileId] = useState<number | null>(null)
   const [showDeleteAccount, setShowDeleteAccount] = useState(false)
+  const [duplicateFileError, setDuplicateFileError] = useState<string | null>(null)
 
   // Check auth status on mount and handle OAuth callback
   useEffect(() => {
@@ -98,7 +99,11 @@ function App() {
       setFiles(prev => [data, ...prev])
       setShowPicker(false)
     } else if (error) {
-      alert(`Import failed: ${error}`)
+      if (error.includes('already imported')) {
+        setDuplicateFileError(error)
+      } else {
+        alert(`Import failed: ${error}`)
+      }
     }
   }, [])
 
@@ -259,6 +264,15 @@ function App() {
         variant="destructive"
         onConfirm={handleDeleteAccount}
         onCancel={() => setShowDeleteAccount(false)}
+      />
+
+      {/* Duplicate File Info */}
+      <ConfirmDialog
+        isOpen={duplicateFileError !== null}
+        title="File Already Imported"
+        message={duplicateFileError || ''}
+        variant="info"
+        onConfirm={() => setDuplicateFileError(null)}
       />
     </div>
   )
