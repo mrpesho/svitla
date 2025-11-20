@@ -99,6 +99,7 @@ def callback():
         user = User.query.filter_by(google_id=user_info['id']).first()
 
         if not user:
+            print(f"Creating new user: {user_info['email']}", flush=True)
             user = User(
                 email=user_info['email'],
                 google_id=user_info['id'],
@@ -107,6 +108,9 @@ def callback():
             )
             db.session.add(user)
             db.session.flush()
+            print(f"User created with id: {user.id}", flush=True)
+        else:
+            print(f"Existing user found: {user.email}, id: {user.id}", flush=True)
 
         # Calculate token expiration
         expires_at = datetime.utcnow() + timedelta(seconds=credentials.expiry.timestamp() - datetime.utcnow().timestamp()) if credentials.expiry else None
@@ -115,10 +119,12 @@ def callback():
         oauth_token = OAuthToken.query.filter_by(user_id=user.id).first()
 
         if oauth_token:
+            print(f"Updating existing OAuth token for user_id: {user.id}", flush=True)
             oauth_token.access_token = credentials.token
             oauth_token.refresh_token = credentials.refresh_token or oauth_token.refresh_token
             oauth_token.expires_at = expires_at
         else:
+            print(f"Creating new OAuth token for user_id: {user.id}", flush=True)
             oauth_token = OAuthToken(
                 user_id=user.id,
                 access_token=credentials.token,
@@ -127,21 +133,25 @@ def callback():
             )
             db.session.add(oauth_token)
 
+        print("Committing user and OAuth token...", flush=True)
         db.session.commit()
+        print("User and OAuth token committed successfully", flush=True)
 
         # Cleanup expired tokens
         cleanup_expired_tokens()
 
         # Generate a one-time token for the frontend to exchange
         token = secrets.token_urlsafe(32)
+        print(f"Creating auth token: {token[:10]}... for user_id: {user.id}", flush=True)
         auth_token = AuthToken(
             token=token,
             user_id=user.id,
             expires_at=datetime.utcnow() + timedelta(minutes=5)  # 5 minute expiry
         )
         db.session.add(auth_token)
+        print("Committing auth token...", flush=True)
         db.session.commit()
-        print(f"OAuth callback - generated token for user_id: {user.id}", flush=True)
+        print(f"Auth token committed successfully for user_id: {user.id}", flush=True)
 
         # Redirect to frontend with token
         return redirect(f"{Config.FRONTEND_URL}?auth=success&token={token}")
@@ -157,27 +167,39 @@ def exchange_token():
     data = request.get_json()
     token_str = data.get('token') if data else None
 
-    print(f"Token exchange attempt - token present: {bool(token_str)}", flush=True)
+    print(f"Token exchange attempt - token: {token_str[:10] if token_str else 'None'}...", flush=True)
 
     if not token_str:
+        print("No token provided", flush=True)
         return jsonify({'error': 'No token provided'}), 401
+
+    # Check how many auth tokens exist in DB
+    all_tokens_count = AuthToken.query.count()
+    print(f"Total auth tokens in DB: {all_tokens_count}", flush=True)
 
     # Find token in database
     auth_token = AuthToken.query.filter_by(token=token_str).first()
 
     if not auth_token:
-        print(f"Token not found in database", flush=True)
+        print(f"Token {token_str[:10]}... not found in database", flush=True)
+        # List all tokens for debugging
+        all_tokens = AuthToken.query.all()
+        for t in all_tokens:
+            print(f"  Existing token: {t.token[:10]}... for user_id: {t.user_id}, expires: {t.expires_at}", flush=True)
         return jsonify({'error': 'Invalid or expired token'}), 401
+
+    print(f"Token found! user_id: {auth_token.user_id}, expires: {auth_token.expires_at}", flush=True)
 
     if auth_token.is_expired():
         db.session.delete(auth_token)
         db.session.commit()
-        print(f"Token expired", flush=True)
+        print(f"Token expired at {auth_token.expires_at}", flush=True)
         return jsonify({'error': 'Token expired'}), 401
 
     user_id = auth_token.user_id
 
     # Delete token (one-time use)
+    print(f"Deleting one-time token...", flush=True)
     db.session.delete(auth_token)
     db.session.commit()
 
@@ -187,8 +209,10 @@ def exchange_token():
 
     user = User.query.get(user_id)
     if not user:
+        print(f"User {user_id} not found in database", flush=True)
         return jsonify({'error': 'User not found'}), 404
 
+    print(f"Returning user: {user.email}", flush=True)
     return jsonify({'authenticated': True, 'user': user.to_dict()})
 
 

@@ -74,9 +74,18 @@ def create_app():
     with app.app_context():
         try:
             db.create_all()
+            print("Database tables created/verified", flush=True)
+
+            # List all tables
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            print(f"Available tables: {tables}", flush=True)
         except Exception as e:
             # Tables might already exist from previous deployment
-            app.logger.warning(f"create_all warning: {e}")
+            app.logger.error(f"create_all error: {e}")
+            import traceback
+            traceback.print_exc()
 
     return app
 
