@@ -25,12 +25,24 @@ function App() {
       // Check for OAuth callback with token
       const params = new URLSearchParams(window.location.search)
       const token = params.get('token')
+      const authStatus = params.get('auth')
+      const errorMessage = params.get('message')
 
-      if (params.get('auth') === 'success' && token) {
-        // Exchange token for session
+      // Handle OAuth error
+      if (authStatus === 'error') {
+        window.history.replaceState({}, '', window.location.pathname)
+        alert(`Authentication failed: ${errorMessage || 'Unknown error'}. Please try again.`)
+        setLoading(false)
+        return
+      }
+
+      // Handle successful OAuth with token
+      if (authStatus === 'success' && token) {
+        console.log('Exchanging token...', token.substring(0, 10) + '...')
         const { data: exchangeData, error } = await authApi.exchange(token)
 
         if (exchangeData?.authenticated && exchangeData.user) {
+          console.log('Token exchange successful, user:', exchangeData.user.email)
           window.history.replaceState({}, '', window.location.pathname)
           setUser(exchangeData.user)
           await loadFiles()
@@ -39,11 +51,13 @@ function App() {
         } else if (error) {
           console.error('Token exchange failed:', error)
           window.history.replaceState({}, '', window.location.pathname)
-          alert(`Authentication failed: ${error}. Please try again.`)
+          alert(`Authentication failed: ${error}. Please try signing in again.`)
           setLoading(false)
           return
         }
-      } else if (params.get('auth') === 'success') {
+      } else if (authStatus === 'success') {
+        // Success but no token - shouldn't happen
+        console.warn('OAuth success but no token received')
         window.history.replaceState({}, '', window.location.pathname)
       }
 

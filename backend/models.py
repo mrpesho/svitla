@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta
 
 db = SQLAlchemy()
 
@@ -66,3 +66,16 @@ class File(db.Model):
             'google_drive_id': self.google_drive_id,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+
+
+class AuthToken(db.Model):
+    __tablename__ = 'auth_tokens'
+
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def is_expired(self):
+        return datetime.utcnow() >= self.expires_at

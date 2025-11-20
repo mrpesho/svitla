@@ -4,15 +4,26 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
-from models import db, User, OAuthToken, File
+from models import db, User, OAuthToken, File, AuthToken
 from config import Config
 import json
 import secrets
 
-# Temporary storage for auth tokens (in production, use Redis)
-auth_tokens = {}
-
 auth_bp = Blueprint('auth', __name__)
+
+
+def cleanup_expired_tokens():
+    """Delete expired auth tokens from database."""
+    try:
+        expired = AuthToken.query.filter(AuthToken.expires_at < datetime.utcnow()).all()
+        for token in expired:
+            db.session.delete(token)
+        db.session.commit()
+        if expired:
+            print(f"Cleaned up {len(expired)} expired auth tokens", flush=True)
+    except Exception as e:
+        print(f"Error cleaning up tokens: {e}", flush=True)
+        db.session.rollback()
 
 def get_google_flow():
     """Create Google OAuth flow."""
@@ -101,9 +112,18 @@ def callback():
 
         db.session.commit()
 
+        # Cleanup expired tokens
+        cleanup_expired_tokens()
+
         # Generate a one-time token for the frontend to exchange
         token = secrets.token_urlsafe(32)
-        auth_tokens[token] = user.id
+        auth_token = AuthToken(
+            token=token,
+            user_id=user.id,
+            expires_at=datetime.utcnow() + timedelta(minutes=5)  # 5 minute expiry
+        )
+        db.session.add(auth_token)
+        db.session.commit()
         print(f"OAuth callback - generated token for user_id: {user.id}", flush=True)
 
         # Redirect to frontend with token
@@ -118,17 +138,33 @@ def callback():
 def exchange_token():
     """Exchange auth token for session."""
     data = request.get_json()
-    token = data.get('token') if data else None
+    token_str = data.get('token') if data else None
 
-    print(f"Token exchange attempt - token present: {bool(token)}, valid: {token in auth_tokens if token else False}", flush=True)
+    print(f"Token exchange attempt - token present: {bool(token_str)}", flush=True)
 
-    if not token:
+    if not token_str:
         return jsonify({'error': 'No token provided'}), 401
 
-    if token not in auth_tokens:
+    # Find token in database
+    auth_token = AuthToken.query.filter_by(token=token_str).first()
+
+    if not auth_token:
+        print(f"Token not found in database", flush=True)
         return jsonify({'error': 'Invalid or expired token'}), 401
 
-    user_id = auth_tokens.pop(token)  # One-time use
+    if auth_token.is_expired():
+        db.session.delete(auth_token)
+        db.session.commit()
+        print(f"Token expired", flush=True)
+        return jsonify({'error': 'Token expired'}), 401
+
+    user_id = auth_token.user_id
+
+    # Delete token (one-time use)
+    db.session.delete(auth_token)
+    db.session.commit()
+
+    # Set session
     session['user_id'] = user_id
     print(f"Token exchange success - set session user_id: {user_id}", flush=True)
 
