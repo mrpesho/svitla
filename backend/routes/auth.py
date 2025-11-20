@@ -43,8 +43,7 @@ def login():
     flow = get_google_flow()
     authorization_url, state = flow.authorization_url(
         access_type='offline',
-        include_granted_scopes='true',
-        prompt='consent'
+        include_granted_scopes='true'
     )
 
     return jsonify({'auth_url': authorization_url})
