@@ -6,6 +6,7 @@ from googleapiclient.discovery import build
 from datetime import datetime, timedelta
 from models import db, User, OAuthToken, File, AuthToken
 from config import Config
+from urllib.parse import quote
 import json
 import secrets
 
@@ -171,16 +172,16 @@ def callback():
         return redirect(f"{Config.FRONTEND_URL}?auth=success&token={token}")
 
     except Exception as e:
-        error_msg = str(e)
+        error_msg = str(e).replace('\n', ' ').replace('\r', ' ')
         current_app.logger.error(f"OAuth callback error: {error_msg}")
 
         # Special handling for scope change errors
         if "Scope has changed" in error_msg and "drive.readonly" in error_msg:
             # Google has a cached auth without Drive scope
-            friendly_msg = "Please try signing in again. If the issue persists, revoke app access at https://myaccount.google.com/permissions and try again."
-            return redirect(f"{Config.FRONTEND_URL}?auth=error&message={friendly_msg}")
+            friendly_msg = "Please try signing in again. If the issue persists, revoke app access and try again."
+            return redirect(f"{Config.FRONTEND_URL}?auth=error&message={quote(friendly_msg)}")
 
-        return redirect(f"{Config.FRONTEND_URL}?auth=error&message={error_msg}")
+        return redirect(f"{Config.FRONTEND_URL}?auth=error&message={quote(error_msg)}")
 
 
 @auth_bp.route('/exchange', methods=['POST'])
