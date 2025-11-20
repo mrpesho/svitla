@@ -74,6 +74,19 @@ def callback():
 
         credentials = flow.credentials
 
+        # Verify we received all required scopes
+        granted_scopes = set(credentials.scopes if hasattr(credentials, 'scopes') and credentials.scopes else [])
+        required_scopes = set(Config.GOOGLE_SCOPES)
+
+        print(f"Granted scopes: {granted_scopes}", flush=True)
+        print(f"Required scopes: {required_scopes}", flush=True)
+
+        if not required_scopes.issubset(granted_scopes):
+            missing_scopes = required_scopes - granted_scopes
+            print(f"Missing scopes: {missing_scopes}", flush=True)
+            error_msg = "Please grant all required permissions including Google Drive access"
+            return redirect(f"{Config.FRONTEND_URL}?auth=error&message={error_msg}")
+
         # Get user info from Google
         oauth2_service = build('oauth2', 'v2', credentials=credentials)
         user_info = oauth2_service.userinfo().get().execute()
