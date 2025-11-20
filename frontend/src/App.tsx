@@ -29,15 +29,19 @@ function App() {
       if (params.get('auth') === 'success' && token) {
         // Exchange token for session
         const { data: exchangeData, error } = await authApi.exchange(token)
-        window.history.replaceState({}, '', window.location.pathname)
 
         if (exchangeData?.authenticated && exchangeData.user) {
+          window.history.replaceState({}, '', window.location.pathname)
           setUser(exchangeData.user)
           await loadFiles()
           setLoading(false)
           return
         } else if (error) {
           console.error('Token exchange failed:', error)
+          window.history.replaceState({}, '', window.location.pathname)
+          alert(`Authentication failed: ${error}. Please try again.`)
+          setLoading(false)
+          return
         }
       } else if (params.get('auth') === 'success') {
         window.history.replaceState({}, '', window.location.pathname)

@@ -120,12 +120,17 @@ def exchange_token():
     data = request.get_json()
     token = data.get('token') if data else None
 
-    if not token or token not in auth_tokens:
-        return jsonify({'error': 'Invalid token'}), 401
+    print(f"Token exchange attempt - token present: {bool(token)}, valid: {token in auth_tokens if token else False}", flush=True)
+
+    if not token:
+        return jsonify({'error': 'No token provided'}), 401
+
+    if token not in auth_tokens:
+        return jsonify({'error': 'Invalid or expired token'}), 401
 
     user_id = auth_tokens.pop(token)  # One-time use
     session['user_id'] = user_id
-    print(f"Token exchange - set session user_id: {user_id}", flush=True)
+    print(f"Token exchange success - set session user_id: {user_id}", flush=True)
 
     user = User.query.get(user_id)
     if not user:
