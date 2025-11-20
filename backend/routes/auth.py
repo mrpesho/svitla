@@ -68,6 +68,11 @@ def login():
 def callback():
     """Handle Google OAuth callback."""
     print(f"Callback received - session keys before: {list(session.keys())}", flush=True)
+
+    # Clear any existing session
+    session.clear()
+    print(f"Session cleared", flush=True)
+
     try:
         flow = get_google_flow()
         flow.fetch_token(authorization_response=request.url)
@@ -157,8 +162,16 @@ def callback():
         return redirect(f"{Config.FRONTEND_URL}?auth=success&token={token}")
 
     except Exception as e:
-        current_app.logger.error(f"OAuth callback error: {str(e)}")
-        return redirect(f"{Config.FRONTEND_URL}?auth=error&message={str(e)}")
+        error_msg = str(e)
+        current_app.logger.error(f"OAuth callback error: {error_msg}")
+
+        # Special handling for scope change errors
+        if "Scope has changed" in error_msg and "drive.readonly" in error_msg:
+            # Google has a cached auth without Drive scope
+            friendly_msg = "Please try signing in again. If the issue persists, revoke app access at https://myaccount.google.com/permissions and try again."
+            return redirect(f"{Config.FRONTEND_URL}?auth=error&message={friendly_msg}")
+
+        return redirect(f"{Config.FRONTEND_URL}?auth=error&message={error_msg}")
 
 
 @auth_bp.route('/exchange', methods=['POST'])
