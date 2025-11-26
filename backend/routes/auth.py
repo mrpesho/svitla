@@ -8,6 +8,7 @@ from models import db, User, OAuthToken, File, AuthToken
 from config import Config
 from urllib.parse import quote
 import json
+import os
 import secrets
 
 auth_bp = Blueprint('auth', __name__)
@@ -274,7 +275,6 @@ def delete_account():
         return jsonify({'error': 'User not found'}), 404
 
     # Delete all user's files from storage
-    import os
     files = File.query.filter_by(user_id=user_id).all()
     for file in files:
         if file.local_path and os.path.exists(file.local_path):
