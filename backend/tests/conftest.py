@@ -31,6 +31,8 @@ def app():
     with app.app_context():
         db.session.remove()
         db.drop_all()
+        # Properly dispose of the engine to close all connections
+        db.engine.dispose()
 
 
 @pytest.fixture
@@ -80,3 +82,4 @@ def auth_user(app):
         if user:
             db.session.delete(user)
             db.session.commit()
+        db.session.close()
