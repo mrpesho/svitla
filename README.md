@@ -15,16 +15,18 @@ A secure document repository that allows users to import files from Google Drive
 ## Tech Stack
 
 **Frontend:**
-- React 18 + TypeScript
-- Vite
+- React 19 + TypeScript
+- Vite 7
 - Tailwind CSS + shadcn/ui
 - Lucide icons
+- Vitest + Testing Library (66% test coverage)
 
 **Backend:**
-- Flask (Python)
-- SQLAlchemy
-- PostgreSQL
+- Flask 3.1
+- SQLAlchemy + PostgreSQL
 - Google OAuth 2.0
+- Pytest + pytest-flask (79% test coverage)
+- Structured logging with rotating file handlers
 
 ## Prerequisites
 
@@ -98,6 +100,8 @@ python app.py
 
 Backend runs at http://localhost:5000
 
+**Logging:** Application logs are written to `backend/logs/dataroom.log` in production (with 10MB rotation). In development mode (FLASK_ENV=dev), logs output to console with DEBUG level.
+
 ### 4. Setup Frontend
 
 ```bash
@@ -111,6 +115,53 @@ npm run dev
 ```
 
 Frontend runs at http://localhost:5173
+
+## Testing
+
+### Backend Tests
+
+```bash
+cd backend
+
+# Run all tests
+pytest
+
+# Run with coverage report
+pytest --cov=. --cov-report=term-missing
+
+# Run with verbose output
+pytest -v
+
+# Run specific test file
+pytest tests/test_file_import.py
+```
+
+**Coverage:** 79% (29 tests)
+- Authentication flow (10 tests)
+- File management (9 tests)
+- Google Drive import (10 tests)
+
+### Frontend Tests
+
+```bash
+cd frontend
+
+# Run all tests
+npm test
+
+# Run with coverage
+npm test -- --coverage
+
+# Run with UI
+npm run test:ui
+```
+
+**Coverage:** 66% (54 tests)
+- App component (16 tests)
+- FileList component (11 tests)
+- GoogleDrivePicker component (12 tests)
+- API client (8 tests)
+- ConfirmDialog component (7 tests)
 
 ## Docker Deployment
 
@@ -173,11 +224,19 @@ VITE_API_URL=http://localhost:5000/api
 - **Session-based auth**: Simpler than JWT for this use case, handles token refresh transparently.
 - **File storage on disk**: As per requirements. In production, would use S3/GCS.
 
+### Code Quality
+- **Comprehensive test coverage**: 79% backend, 66% frontend with unit and integration tests
+- **Modern dependencies**: Latest stable versions of Flask 3.1, React 19, SQLAlchemy
+- **Structured logging**: Rotating file handlers with configurable log levels (INFO in production, DEBUG in dev)
+- **Clean imports**: All imports organized at the top of files for better maintainability
+- **Type safety**: TypeScript on frontend, type hints on backend
+
 ### Security
 - OAuth tokens stored server-side only
 - Automatic token refresh
 - Files are user-scoped (users can only access their own files)
 - CORS configured for specific origins
+- Secure session cookies with SameSite protection
 
 ### UX Considerations
 - Clean, minimal interface inspired by Google Drive
