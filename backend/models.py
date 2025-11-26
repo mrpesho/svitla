@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 db = SQLAlchemy()
 
@@ -11,7 +11,7 @@ class User(db.Model):
     google_id = db.Column(db.String(255), unique=True, nullable=False)
     name = db.Column(db.String(255))
     picture = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     # Relationships
     oauth_token = db.relationship('OAuthToken', backref='user', uselist=False, cascade='all, delete-orphan')
@@ -36,13 +36,19 @@ class OAuthToken(db.Model):
     refresh_token = db.Column(db.Text)
     token_type = db.Column(db.String(50), default='Bearer')
     expires_at = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
     def is_expired(self):
         if not self.expires_at:
             return True
-        return datetime.utcnow() >= self.expires_at
+        # Handle both timezone-aware (PostgreSQL) and naive (SQLite) datetimes
+        now = datetime.now(UTC)
+        expires = self.expires_at
+        if expires.tzinfo is None:
+            # SQLite returns naive datetimes, treat as UTC
+            expires = expires.replace(tzinfo=UTC)
+        return now >= expires
 
 
 class File(db.Model):
@@ -55,7 +61,7 @@ class File(db.Model):
     size = db.Column(db.BigInteger)  # Size in bytes
     google_drive_id = db.Column(db.String(255))  # Original Google Drive file ID
     local_path = db.Column(db.String(1000), nullable=False)  # Path on server disk
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     def to_dict(self):
         return {
@@ -75,7 +81,13 @@ class AuthToken(db.Model):
     token = db.Column(db.String(255), unique=True, nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     def is_expired(self):
-        return datetime.utcnow() >= self.expires_at
+        # Handle both timezone-aware (PostgreSQL) and naive (SQLite) datetimes
+        now = datetime.now(UTC)
+        expires = self.expires_at
+        if expires.tzinfo is None:
+            # SQLite returns naive datetimes, treat as UTC
+            expires = expires.replace(tzinfo=UTC)
+        return now >= expires

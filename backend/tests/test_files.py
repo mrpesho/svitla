@@ -54,7 +54,7 @@ def test_list_files_with_files(client, app, auth_user):
 
     # Cleanup
     with app.app_context():
-        file_to_delete = File.query.get(file_id)
+        file_to_delete = db.session.get(File, file_id)
         if file_to_delete:
             db.session.delete(file_to_delete)
             db.session.commit()
@@ -125,7 +125,7 @@ def test_delete_file_success(client, app, auth_user):
 
     # Verify file was deleted from database
     with app.app_context():
-        file_record = File.query.get(file_id)
+        file_record = db.session.get(File, file_id)
         assert file_record is None
 
     # Verify file was deleted from disk
@@ -168,6 +168,10 @@ def test_file_ownership(client, app, auth_user):
 
     # Cleanup
     with app.app_context():
-        File.query.filter_by(id=other_file_id).delete()
-        User.query.filter_by(id=other_user_id).delete()
+        other_file = db.session.get(File, other_file_id)
+        other_user = db.session.get(User, other_user_id)
+        if other_file:
+            db.session.delete(other_file)
+        if other_user:
+            db.session.delete(other_user)
         db.session.commit()

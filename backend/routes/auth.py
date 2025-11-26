@@ -231,7 +231,7 @@ def exchange_token():
     session['user_id'] = user_id
     print(f"Token exchange success - set session user_id: {user_id}", flush=True)
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         print(f"User {user_id} not found in database", flush=True)
         return jsonify({'error': 'User not found'}), 404
@@ -248,7 +248,7 @@ def get_current_user():
     if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
@@ -270,7 +270,7 @@ def delete_account():
     if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
@@ -305,7 +305,7 @@ def auth_status():
     if not user_id:
         return jsonify({'authenticated': False})
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return jsonify({'authenticated': False})
 

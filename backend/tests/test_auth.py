@@ -1,6 +1,6 @@
 """Tests for authentication routes."""
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from models import db, User, AuthToken, OAuthToken
 
 
@@ -74,7 +74,7 @@ def test_token_exchange_valid_token(client, app, auth_user):
         token = AuthToken(
             token='valid-test-token',
             user_id=auth_user.id,
-            expires_at=datetime.utcnow() + timedelta(minutes=5)
+            expires_at=datetime.now(UTC) + timedelta(minutes=5)
         )
         db.session.add(token)
         db.session.commit()
@@ -97,7 +97,7 @@ def test_token_exchange_expired_token(client, app, auth_user):
         token = AuthToken(
             token='expired-test-token',
             user_id=auth_user.id,
-            expires_at=datetime.utcnow() - timedelta(minutes=5)
+            expires_at=datetime.now(UTC) - timedelta(minutes=5)
         )
         db.session.add(token)
         db.session.commit()
@@ -125,7 +125,7 @@ def test_delete_account(client, app, auth_user):
 
     # Verify user was deleted
     with app.app_context():
-        user = User.query.get(auth_user.id)
+        user = db.session.get(User, auth_user.id)
         assert user is None
 
 
